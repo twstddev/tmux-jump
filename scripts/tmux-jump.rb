@@ -107,7 +107,7 @@ def read_char_from_file!(tmp_file) # raises Timeout::Error
   Timeout.timeout(10) do
     begin
       loop do # busy waiting with files :/
-        break if char = tmp_file.getc
+        break if char = tmp_file.gets()
       end
     end
   end
@@ -131,15 +131,7 @@ def async_detect_user_escape(result_queue)
 end
 
 def positions_of(jump_to_char, screen_chars)
-  positions = []
-
-  positions << 0 if screen_chars[0] =~ /\w/ && screen_chars[0].downcase == jump_to_char
-  screen_chars.each_char.with_index do |char, i|
-    if (char =~ /\w/).nil? && screen_chars[i+1] && screen_chars[i+1].downcase == jump_to_char
-      positions << i+1
-    end
-  end
-  positions
+  screen_chars.enum_for(:scan, /(?=#{Regexp.quote(jump_to_char)})/i).map { Regexp.last_match.offset(0).first }
 end
 
 def draw_keys_onto_tty(screen_chars, positions, keys, key_len)
